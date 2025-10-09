@@ -66,7 +66,7 @@ sudo dnf install -y jq
 
 1. **Download the script**:
 ```bash
-curl -fsSLo https://raw.githubusercontent.com/Cortex-Cloud/azure-cleanup-tool/main/azure-cleanup-tool.sh && chmod +x azure-cleanup-tool.sh
+curl -fsslO https://raw.githubusercontent.com/naveednawazkhan/Cortex-Cloud/refs/heads/main/azure-cleanup-tool.sh && chmod +x azure-cleanup-tool.sh
 ```
 
 2. **Verify prerequisites**:
