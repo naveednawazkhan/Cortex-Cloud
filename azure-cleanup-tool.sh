@@ -52,10 +52,10 @@ usage() {
     echo "  --help             Show this help message"
     echo
     echo -e "${YELLOW}Examples:${NC}"
-    echo "  ./$0 cortex"
-    echo "  ./$0 cortex --dry-run"
-    echo "  ./$0 cortex --subscription 12345-67890 --dry-run"
-    echo "  ./$0 cortex --delete"
+    echo "  $0 cortex"
+    echo "  $0 cortex --dry-run"
+    echo "  $0 cortex --subscription 12345-67890 --dry-run"
+    echo "  $0 cortex --delete"
     exit 1
 }
 
