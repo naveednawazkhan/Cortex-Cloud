@@ -579,73 +579,73 @@ discover_management_group_deployments() {
     done
 }
 
-# discover_enterprise_apps() {
-#     log_info "Searching for enterprise applications..."
+discover_enterprise_apps() {
+    log_info "Searching for enterprise applications..."
     
-#     # Use multiple query approaches to find enterprise apps
-#     local apps
-#     apps=$(az ad app list --query "[?contains(displayName, '$SANITIZED_PATTERN') || contains(appId, '$SANITIZED_PATTERN')].[displayName,appId]" -o tsv 2>/dev/null || true)
+    # Use multiple query approaches to find enterprise apps
+    local apps
+    apps=$(az ad app list --query "[?contains(displayName, '$SANITIZED_PATTERN') || contains(appId, '$SANITIZED_PATTERN')].[displayName,appId]" -o tsv 2>/dev/null || true)
     
-#     if [[ -z "$apps" ]]; then
-#         # Also try searching by alternative names and identifiers
-#         apps=$(az ad app list --query "[].{displayName:displayName, appId:appId}" -o json 2>/dev/null | jq -r ".[] | select(.displayName | test(\"$NAME_PATTERN\"; \"i\")) | [.displayName, .appId] | @tsv" || true)
-#     fi
+    if [[ -z "$apps" ]]; then
+        # Also try searching by alternative names and identifiers
+        apps=$(az ad app list --query "[].{displayName:displayName, appId:appId}" -o json 2>/dev/null | jq -r ".[] | select(.displayName | test(\"$NAME_PATTERN\"; \"i\")) | [.displayName, .appId] | @tsv" || true)
+    fi
     
-#     if [[ -z "$apps" ]]; then
-#         log_debug "No enterprise applications found matching pattern: $NAME_PATTERN"
-#         return
-#     fi
+    if [[ -z "$apps" ]]; then
+        log_debug "No enterprise applications found matching pattern: $NAME_PATTERN"
+        return
+    fi
     
-#     while IFS=$'\t' read -r appName appId; do
-#         [[ -z "$appName" ]] && continue
-#         echo "  → Found Enterprise Application: $(safe_highlight "$appName" "$NAME_PATTERN") ($appId)"
-#         SUMMARY_ROWS+=("$appName|EnterpriseApplication|Tenant|AppID: $appId")
-#         ALL_IDS+=("$appId")
-#         RESOURCE_TYPES["$appId"]="EnterpriseApplication"
-#         RESOURCE_DETAILS["$appId"]="$appName|EnterpriseApplication|Tenant|$appId"
-#         RESOURCES_FOUND=true
-#     done <<< "$apps"
-# }
+    while IFS=$'\t' read -r appName appId; do
+        [[ -z "$appName" ]] && continue
+        echo "  → Found Enterprise Application: $(safe_highlight "$appName" "$NAME_PATTERN") ($appId)"
+        SUMMARY_ROWS+=("$appName|EnterpriseApplication|Tenant|AppID: $appId")
+        ALL_IDS+=("$appId")
+        RESOURCE_TYPES["$appId"]="EnterpriseApplication"
+        RESOURCE_DETAILS["$appId"]="$appName|EnterpriseApplication|Tenant|$appId"
+        RESOURCES_FOUND=true
+    done <<< "$apps"
+}
 
-# discover_service_principals() {
-#     log_info "Searching for service principals..."
+discover_service_principals() {
+    log_info "Searching for service principals..."
     
-#     local sps
-#     sps=$(az ad sp list --query "[?contains(displayName, '$SANITIZED_PATTERN') || contains(appId, '$SANITIZED_PATTERN')].[displayName,id,appId]" -o tsv 2>/dev/null || true)
+    local sps
+    sps=$(az ad sp list --query "[?contains(displayName, '$SANITIZED_PATTERN') || contains(appId, '$SANITIZED_PATTERN')].[displayName,id,appId]" -o tsv 2>/dev/null || true)
     
-#     if [[ -z "$sps" ]]; then
-#         log_debug "No service principals found matching pattern: $NAME_PATTERN"
-#         return
-#     fi
+    if [[ -z "$sps" ]]; then
+        log_debug "No service principals found matching pattern: $NAME_PATTERN"
+        return
+    fi
     
-#     while IFS=$'\t' read -r spName spId appId; do
-#         [[ -z "$spName" ]] && continue
+    while IFS=$'\t' read -r spName spId appId; do
+        [[ -z "$spName" ]] && continue
         
-#         local details=""
-#         if [[ -n "$appId" && "$appId" != "null" ]]; then
-#             details="AppID: $appId"
-#         fi
+        local details=""
+        if [[ -n "$appId" && "$appId" != "null" ]]; then
+            details="AppID: $appId"
+        fi
         
-#         echo "  → Found Service Principal: $(safe_highlight "$spName" "$NAME_PATTERN") ($spId)"
-#         SUMMARY_ROWS+=("$spName|ServicePrincipal|Tenant|$details")
-#         ALL_IDS+=("$spId")
-#         RESOURCE_TYPES["$spId"]="ServicePrincipal"
-#         RESOURCE_DETAILS["$spId"]="$spName|ServicePrincipal|Tenant|$spId"
-#         RESOURCES_FOUND=true
+        echo "  → Found Service Principal: $(safe_highlight "$spName" "$NAME_PATTERN") ($spId)"
+        SUMMARY_ROWS+=("$spName|ServicePrincipal|Tenant|$details")
+        ALL_IDS+=("$spId")
+        RESOURCE_TYPES["$spId"]="ServicePrincipal"
+        RESOURCE_DETAILS["$spId"]="$spName|ServicePrincipal|Tenant|$spId"
+        RESOURCES_FOUND=true
         
-#         # Also add the associated Enterprise App if we found the App ID
-#         # if [[ -n "$appId" && "$appId" != "null" ]]; then
-#         #     # Check if we already have this Enterprise App
-#         #     if [[ ! " ${ALL_IDS[@]} " =~ " ${appId} " ]]; then
-#         #         echo "  → Found associated Enterprise Application: $(safe_highlight "$spName" "$NAME_PATTERN") ($appId)"
-#         #         SUMMARY_ROWS+=("$spName|EnterpriseApplication|Tenant|AppID: $appId")
-#         #         ALL_IDS+=("$appId")
-#         #         RESOURCE_TYPES["$appId"]="EnterpriseApplication"
-#         #         RESOURCE_DETAILS["$appId"]="$spName|EnterpriseApplication|Tenant|$appId"
-#         #     fi
-#         # fi
-#     done <<< "$sps"
-# }
+        # Also add the associated Enterprise App if we found the App ID
+        # if [[ -n "$appId" && "$appId" != "null" ]]; then
+        #     # Check if we already have this Enterprise App
+        #     if [[ ! " ${ALL_IDS[@]} " =~ " ${appId} " ]]; then
+        #         echo "  → Found associated Enterprise Application: $(safe_highlight "$spName" "$NAME_PATTERN") ($appId)"
+        #         SUMMARY_ROWS+=("$spName|EnterpriseApplication|Tenant|AppID: $appId")
+        #         ALL_IDS+=("$appId")
+        #         RESOURCE_TYPES["$appId"]="EnterpriseApplication"
+        #         RESOURCE_DETAILS["$appId"]="$spName|EnterpriseApplication|Tenant|$appId"
+        #     fi
+        # fi
+    done <<< "$sps"
+}
 
 # --- Enhanced Custom Role Discovery (from second script) ---
 discover_custom_roles_enhanced() {
@@ -798,7 +798,7 @@ delete_directory_diagnostic_setting() {
     
     log_special "Deleting Azure AD Diagnostic Setting: $setting_name (Default Directory)"
     
-    # Use your working API pattern
+    # Use the working API pattern
     local result
     result=$(az rest --method delete \
         --url "https://management.azure.com/providers/microsoft.aadiam/diagnosticSettings/${setting_name}?api-version=2017-04-01-preview" \
@@ -809,19 +809,31 @@ delete_directory_diagnostic_setting() {
         log_success "Successfully deleted Azure AD Diagnostic Setting: $setting_name"
         return 0
     else
-        log_error "❌ Failed to delete Azure AD Diagnostic Setting: $setting_name"
-        log_error "Error: $result"
+        # Check if it was actually deleted (sometimes API returns error but deletion succeeds)
+        log_debug "Checking if AAD diagnostic setting was actually deleted..."
+        local check_result
+        check_result=$(az rest --method get \
+            --url "https://management.azure.com/providers/microsoft.aadiam/diagnosticSettings/${setting_name}?api-version=2017-04-01-preview" \
+            2>&1)
         
-        if [[ "$result" == *"Permission"* ]] || [[ "$result" == *"authorized"* ]]; then
-            log_error "🔐 Insufficient permissions to delete Azure AD diagnostic settings."
-            log_error "Required permission: microsoft.aadiam/diagnosticSettings/delete"
-            log_error "Contact your Azure administrator for the required permissions."
-        elif [[ "$result" == *"not found"* ]]; then
-            log_warning "⚠️  Azure AD diagnostic setting not found (may have been deleted already)"
+        if [[ "$check_result" == *"NotFound"* ]] || [[ "$check_result" == *"ResourceNotFound"* ]]; then
+            log_success "Azure AD Diagnostic Setting deleted successfully (verified): $setting_name"
             return 0
+        else
+            log_error "❌ Failed to delete Azure AD Diagnostic Setting: $setting_name"
+            log_error "Error: $result"
+            
+            if [[ "$result" == *"Permission"* ]] || [[ "$result" == *"authorized"* ]]; then
+                log_error "🔐 Insufficient permissions to delete Azure AD diagnostic settings."
+                log_error "Required permission: microsoft.aadiam/diagnosticSettings/delete"
+                log_error "Contact your Azure administrator for the required permissions."
+            elif [[ "$result" == *"not found"* ]]; then
+                log_warning "⚠️  Azure AD diagnostic setting not found (may have been deleted already)"
+                return 0
+            fi
+            
+            return 1
         fi
-        
-        return 1
     fi
 }
 
@@ -1193,8 +1205,8 @@ main() {
     # --- Enhanced Custom Role Discovery ---
     discover_custom_roles_enhanced
     discover_role_assignments_for_custom_roles
-    # discover_enterprise_apps
-    #discover_service_principals
+    discover_enterprise_apps
+    discover_service_principals
     
     echo ""
     echo "========================================================="
@@ -1354,33 +1366,14 @@ main() {
         fi
     done
     
-    # Phase 9: Regular Resources (EXCLUDE DirectoryDiagnosticSetting)
+    # Phase 9: Custom Roles (with enhanced deletion from second script)
     for id in "${ALL_IDS[@]}"; do
-        local resource_type
-        if [[ "$BASH_VERSINFO" -ge 4 ]]; then
-            resource_type="${RESOURCE_TYPES[$id]}"
-        else
-            resource_type=$(get_resource_type "$id")
-        fi
-        
-        # EXCLUDE these resource types from regular resource processing
-        if [[ "$resource_type" != "ResourceGroup" && \
-              "$resource_type" != "CustomRole" && \
-              "$resource_type" != "EnterpriseApplication" && \
-              "$resource_type" != "ServicePrincipal" && \
-              "$resource_type" != "ManagementGroupRoleAssignment" && \
-              "$resource_type" != "SubscriptionRoleAssignment" && \
-              "$resource_type" != "RoleAssignment" && \
-              "$resource_type" != "UnknownRoleAssignment" && \
-              "$resource_type" != "PolicyAssignment" && \
-              "$resource_type" != "PolicyRemediation" && \
-              "$resource_type" != "ManagementGroupDeployment" && \
-              "$resource_type" != "DirectoryDiagnosticSetting" && \          
-              "$resource_type" != "DiagnosticSetting" && \                    
-              "$resource_type" != "SubscriptionDiagnosticSetting" ]]; then    
-            IFS="|" read -r name type sub <<< "${RESOURCE_DETAILS[$id]}"
-            log_info "Deleting Resource: $name ($type)"
-            if delete_with_retry "$id" "$type"; then
+        if [[ "${RESOURCE_TYPES[$id]}" == "CustomRole" ]]; then
+            IFS="|" read -r name type scope extra <<< "${RESOURCE_DETAILS[$id]}"
+            # First delete any remaining role assignments
+            delete_role_assignment_enhanced "$id" "$name"
+            # Then delete the custom role itself
+            if delete_custom_role_enhanced "$id" "$name"; then
                 ((deleted_count++))
             else
                 ((failed_count++))
@@ -1401,7 +1394,8 @@ main() {
               "$type" != "UnknownRoleAssignment" && \
               "$type" != "PolicyAssignment" && \
               "$type" != "PolicyRemediation" && \
-              "$type" != "ManagementGroupDeployment" ]]; then
+              "$type" != "ManagementGroupDeployment" && \
+              "$type" != "DirectoryDiagnosticSetting" ]]; then    
             IFS="|" read -r name type sub <<< "${RESOURCE_DETAILS[$id]}"
             log_info "Deleting Resource: $name ($type)"
             if delete_with_retry "$id" "$type"; then
@@ -1442,7 +1436,7 @@ main() {
     echo
     if [[ $failed_count -eq 0 ]]; then
         echo "========================================================="
-        log_success "Deletion commands issued for $deleted_count resource(s)"
+        log_success "Successfully deletion completed for $deleted_count resource(s)"
         echo "========================================================="
     else
         log_warning "Deletion completed with $failed_count failure(s)"
