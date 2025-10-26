@@ -29,7 +29,7 @@ A comprehensive Bash script for discovering and cleaning up Azure resources acro
 
 ### System Requirements
 - **Bash**: Version 4.0 or higher (5.0+ recommended)
-- **Azure CLI**: Version 2.0 or higher
+- **Azure Cloud Shell-Bash** or (**Azure CLI**: Version 2.0 or higher)
 - **jq**: JSON processor
 - **column**: Table formatting utility (usually pre-installed)
 
